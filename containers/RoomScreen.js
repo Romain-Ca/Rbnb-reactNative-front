@@ -3,6 +3,8 @@ import { Entypo } from "@expo/vector-icons";
 import { useRoute, useNavigation } from "@react-navigation/core";
 import axios from "axios";
 import SwiperFlatList from "react-native-swiper-flatlist";
+import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
+import { AntDesign } from "@expo/vector-icons";
 import {
   Image,
   Text,
@@ -11,19 +13,32 @@ import {
   ActivityIndicator,
   SafeAreaView,
   ScrollView,
+  TouchableOpacity,
+  Dimensions,
 } from "react-native";
-import { FlatList } from "react-native-gesture-handler";
+
+// Constante Dimensions
+const width = Dimensions.get("window").width;
+const height = Dimensions.get("window").height;
 
 export default function RoomScreen() {
   // Ustates
   const [rooms, setRooms] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPressed, setIsPressed] = useState(false);
   // Constante
   const { params } = useRoute();
   const navigation = useNavigation();
   const id = params.id;
+  const handlePress = () => {
+    if (isPressed) {
+      setIsPressed(false);
+    } else {
+      setIsPressed(true);
+    }
+  };
   // console.log(id);
-  // console.log(rooms.photos[0].url);
+  // console.log(rooms.location[0]);
 
   // Requête Axios
   useEffect(() => {
@@ -68,7 +83,7 @@ export default function RoomScreen() {
               showPagination
               data={rooms.photos}
               renderItem={({ item }) => {
-                console.log(item);
+                // console.log(item);
                 return (
                   <Image
                     style={styles.picture1}
@@ -141,6 +156,50 @@ export default function RoomScreen() {
               />
             </View>
           </View>
+
+          {/* ----- DESCRIPTION ----- */}
+
+          <View marginBottom={30}>
+            {isPressed === false ? (
+              <>
+                <Text numberOfLines={3}>{rooms.description}</Text>
+                <TouchableOpacity onPress={handlePress}>
+                  <Text style={styles.Button}>Show more</Text>
+                  <AntDesign name="caretdown" size={12} color={"grey"} />
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Text numberOfLines={20}>{rooms.description}</Text>
+
+                <TouchableOpacity onPress={handlePress}>
+                  <Text style={styles.Button}>Show less</Text>
+                  <AntDesign name="caretup" size={12} color={"grey"} />
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+
+          {/* ----- MAP ----- */}
+          {/* Ici on veut faire apparaître une map centré sur Paris */}
+          {/* Puis on récupère rooms.location pour afficher la position marker de l'appartement*/}
+          <MapView
+            // La MapView doit obligatoirement avoir des dimensions style=
+            style={styles.map}
+            initialRegion={{
+              latitude: 48.856614,
+              longitude: 2.3522219,
+              latitudeDelta: 0.2,
+              longitudeDelta: 0.2,
+            }}
+          >
+            <MapView.Marker
+              coordinate={{
+                longitude: rooms.location[0],
+                latitude: rooms.location[1],
+              }}
+            />
+          </MapView>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -187,7 +246,7 @@ const styles = StyleSheet.create({
   },
   picture1: {
     height: 250,
-    width: "100%",
+    width: 300,
   },
   price: {
     position: "absolute",
@@ -242,5 +301,18 @@ const styles = StyleSheet.create({
     height: 100,
     width: 100,
     borderRadius: 50,
+  },
+  // Description
+
+  Button: {
+    color: "#A1A1A1",
+    fontWeight: "500",
+    marginTop: 10,
+  },
+
+  // Map
+  map: {
+    width: width,
+    height: 500,
   },
 });
